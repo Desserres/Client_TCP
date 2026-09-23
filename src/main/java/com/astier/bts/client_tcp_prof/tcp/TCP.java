@@ -9,17 +9,13 @@ package com.astier.bts.client_tcp_prof.tcp;
 import com.astier.bts.client_tcp_prof.HelloController;
 import javafx.application.Platform;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 
+import OUTILS.exceptions.*;
+import javafx.scene.paint.Color;
 
-import static javafx.scene.paint.Color.RED;
 
 /**
  * @author Michael
@@ -30,9 +26,9 @@ public class TCP extends Thread {
     Socket socket;
     boolean marche = false;
     boolean connection = false;
-    PrintStream out;
-    BufferedReader in;
-
+    OutputStream outBin;
+    InputStream inBin;
+    byte[] bufferEntreeBin = new byte[6535];
     HelloController fxmlCont;
 
     public TCP() {
@@ -46,23 +42,61 @@ public class TCP extends Thread {
     }
 
 
-
     public void connection() {
-       //todo
+        if (this.isAlive()) {
+            return;
+        }
+        try {
+            this.socket = new Socket();
+            SocketAddress socketAddress = new InetSocketAddress(serveur, port);
+            this.socket.connect(socketAddress, 2000);
+            this.socket.setSoTimeout(5000);
+            outBin = socket.getOutputStream();
+            inBin = socket.getInputStream();
+            marche = true;
+            start();
+
+        } catch (IOException e) {
+            DiagnosticException.afficheException(e);
+        }
     }
 
     public void deconnection() throws InterruptedException {
-        //todo
+        if (this.isAlive()) {
+            return;
+        }
+        try {
+            marche = false;
+            fxmlCont.voyant.setFill(Color.RED);
+            outBin.flush();
+            Thread.sleep(1000);
+            outBin.close();
+            inBin.close();
+            socket.close();
+        } catch (Exception e) {
+            DiagnosticException.afficheException(e);
+        }
     }
 
     public void requette(String laRequette) throws IOException {
-        out.println(laRequette);  // envoi reseau
-        System.out.println("la requette " + laRequette);
+        if (marche) {
+            outBin.write(laRequette.getBytes(StandardCharsets.UTF_8));
+            outBin.flush();
+            System.out.println("La requette envoyée: " + laRequette);
+        }
     }
 
     public void run() {
         while (marche) {
-            //todo
+            try {
+                int nbLusBin = inBin.read(bufferEntreeBin);
+                if (nbLusBin == -1) {
+                    break;
+                }
+            } catch (IOException e) {
+                DiagnosticException.afficheException(e);
+            }
+
         }
     }
 

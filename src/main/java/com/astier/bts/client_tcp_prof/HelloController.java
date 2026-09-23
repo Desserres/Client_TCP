@@ -1,5 +1,6 @@
 package com.astier.bts.client_tcp_prof;
 
+import OUTILS.exceptions.DiagnosticException;
 import com.astier.bts.client_tcp_prof.tcp.TCP;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -24,6 +25,9 @@ public class HelloController implements Initializable {
     public Button button;
     public Button connecter;
     public Button deconnecter;
+
+
+
     public TextField TextFieldIP;
     public TextField TextFieldPort;
     public TextField TextFieldRequette;
@@ -38,8 +42,8 @@ public class HelloController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        TextFieldPort.setText("4000");
-        TextFieldIP.setText("127.0.0.1");
+        TextFieldPort.setText("7661");
+        TextFieldIP.setText("10.0.4.10");
 
         connecter.setOnAction(event -> {
             port = TextFieldPort.getText();
@@ -56,9 +60,9 @@ public class HelloController implements Initializable {
             try {
                 deconnecter();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                DiagnosticException.afficheException(e);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                DiagnosticException.afficheException(e);
             }
         });
 
@@ -66,11 +70,10 @@ public class HelloController implements Initializable {
             try {
                 envoyer();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                DiagnosticException.afficheException(e);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                DiagnosticException.afficheException(e);
             }
-            //todo
         });
     }
 
@@ -92,7 +95,6 @@ public class HelloController implements Initializable {
     }
 
     private void connecter() throws UnknownHostException {
-        //todo OUI!
         if (enRun) {
             return;
         }
@@ -101,8 +103,8 @@ public class HelloController implements Initializable {
 
         try {
             int port = Integer.parseInt(TextFieldPort.getText());
-
-            socket = new Socket(InetAddress.getLoopbackAddress(), port);
+            String sock = TextFieldIP.getText();
+            socket = new Socket(InetAddress.getByName(sock), port);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintStream(socket.getOutputStream(), true);
 
@@ -115,7 +117,8 @@ public class HelloController implements Initializable {
             } finally {
             }
 
-        } catch (Exception Ignored) {
+        } catch (Exception e) {
+            DiagnosticException.afficheException(e);
             enRun = false;
         }
     }
